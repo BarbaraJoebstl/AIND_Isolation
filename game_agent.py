@@ -258,6 +258,9 @@ class AlphaBetaPlayer(IsolationPlayer):
     search with alpha-beta pruning. You must finish and test this player to
     make sure it returns a good move before the search time limit expires.
     """
+    def is_time_over(self):
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise SearchTimeout()
 
     def get_move(self, game, time_left):
         """Search for the best move from the available legal moves and return a
@@ -291,8 +294,22 @@ class AlphaBetaPlayer(IsolationPlayer):
         """
         self.time_left = time_left
 
-        # TODO: finish this function!
-        raise NotImplementedError
+        # Initialize the best move so that this function returns something
+        # in case the search fails due to timeout
+        self.best_move = (-1, -1)
+        depth = 1
+        try:
+            while (True):
+                move = self.alphabeta(game, depth)
+                if move is not (-1, -1):
+                    self.best_move = move
+                depth += 1
+                
+                if self.time_left() < self.TIMER_THRESHOLD:
+                    return self.best_move
+        except SearchTimeout:
+            #return best move with best possible depth
+            return self.best_move
 
     def alphabeta(self, game, depth, alpha=float("-inf"), beta=float("inf")):
         """Implement depth-limited minimax search with alpha-beta pruning as
@@ -300,11 +317,6 @@ class AlphaBetaPlayer(IsolationPlayer):
 
         This should be a modified version of ALPHA-BETA-SEARCH in the AIMA text
         https://github.com/aimacode/aima-pseudocode/blob/master/md/Alpha-Beta-Search.md
-
-        **********************************************************************
-            You MAY add additional methods to this class, or define helper
-                 functions to implement the required functionality.
-        **********************************************************************
 
         Parameters
         ----------
@@ -339,8 +351,46 @@ class AlphaBetaPlayer(IsolationPlayer):
                 each helper function or else your agent will timeout during
                 testing.
         """
-        if self.time_left() < self.TIMER_THRESHOLD:
-            raise SearchTimeout()
+        legal_moves = game.get_legal_moves()
+        if not legal_moves:
+            return (-1, -1)
+        self.best_current_move = legal_moves[0]
+        for m in legal_moves:
+            self.is_time_over()
+            next_level = game.forecast_move(m)
+            # computer starts
+            score = self.min_value(next_level, depth - 1, alpha, beta)
+            if score > alpha:
+                alpha = score
+                self.best_current_move = m
+        return self.best_current_move
+    
+    def min_value(self, game, depth, alpha, beta):
+        if depth == 0:
+            return self.score(game, self)
+        legal_moves = game.get_legal_moves()
+        for m in legal_moves:
+            self.is_time_over()
+            next_level = game.forecast_move(m)
+            score = self.max_value(next_level, depth - 1, alpha, beta)
+            if score < beta:
+                beta = score 
+                if beta <= alpha:
+                    #we can prune this branch
+                    break       
+        return beta
 
-        # TODO: finish this function!
-        raise NotImplementedError
+    def max_value(self, game, depth, alpha, beta):
+        if depth == 0:
+            return self.score(game, self)
+        legal_moves = game.get_legal_moves()
+        for m in legal_moves:
+            self.is_time_over()
+            next_level = game.forecast_move(m)
+            score = self.min_value(next_level, depth - 1, alpha, beta)
+            if score > alpha:
+                alpha = score 
+                if alpha >= beta:
+                    #we can prune this branch
+                    break       
+        return alpha
