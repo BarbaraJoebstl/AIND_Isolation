@@ -11,13 +11,7 @@ class SearchTimeout(Exception):
 
 
 def custom_score(game, player):
-    """Calculate the heuristic value of a game state from the point of view
-    of the given player.
-
-    This should be the best heuristic function for your project submission.
-
-    Note: this function should be called from within a Player instance as
-    `self.score()` -- you should not need to call this function directly.
+    """This heurisitc calculates the occupied space on the gameboard.
 
     Parameters
     ----------
@@ -34,16 +28,18 @@ def custom_score(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    # TODO: finish this function!
-    raise NotImplementedError
+    if game.is_loser(player):
+            return float('-inf')
 
+    if game.is_winner(player):
+        return float('inf')
+    
+    blank_spaces = game.get_blank_spaces()
+    total_spaces = game.width * game.height
+    return float((len(blank_spaces)/total_spaces)*100)
 
 def custom_score_2(game, player):
-    """Calculate the heuristic value of a game state from the point of view
-    of the given player.
-
-    Note: this function should be called from within a Player instance as
-    `self.score()` -- you should not need to call this function directly.
+    """his score is removes 3 legal_moves if the player is in a corner position, because the chance to win is always worse if you are in the corners.
 
     Parameters
     ----------
@@ -60,16 +56,29 @@ def custom_score_2(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    # TODO: finish this function!
-    raise NotImplementedError
+
+    if game.is_loser(player):
+            return float('-inf')
+
+    if game.is_winner(player):
+        return float('inf')
+    
+    my_moves = len(game.get_legal_moves(player))
+    
+    opponent_moves = len(game.get_legal_moves(game.get_opponent(player)))
+
+    corners_array = [(0,0), (0, game.height - 1), (game.width - 1, 0), (game.width - 1, game.height - 1)]
+    
+    if game.get_player_location(player) in corners_array:
+        # downgrade, because of bad position on the gameboard
+        my_moves -= 3
+
+    return float(my_moves - opponent_moves)    
+        
 
 
 def custom_score_3(game, player):
-    """Calculate the heuristic value of a game state from the point of view
-    of the given player.
-
-    Note: this function should be called from within a Player instance as
-    `self.score()` -- you should not need to call this function directly.
+    """this score is equal to the difference of aivailable moves for the player and twice for the oppenent - so it is more aggressive, because of the multiplier
 
     Parameters
     ----------
@@ -86,8 +95,16 @@ def custom_score_3(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    # TODO: finish this function!
-    raise NotImplementedError
+    if game.is_loser(player):
+        return float('-inf')
+
+    if game.is_winner(player):
+        return float('inf')
+
+    my_moves = len(game.get_legal_moves(player))
+    opponent_moves = len(game.get_legal_moves(game.get_opponent(player)))
+
+    return float(my_moves - 2 * opponent_moves)
 
 
 class IsolationPlayer:
