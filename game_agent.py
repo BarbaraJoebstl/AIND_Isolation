@@ -11,7 +11,7 @@ class SearchTimeout(Exception):
 
 
 def custom_score(game, player):
-    """This heurisitc calculates the occupied space on the gameboard.
+    """This heurisitc calculates the left blank space on the gameboard.
 
     Parameters
     ----------
@@ -34,9 +34,9 @@ def custom_score(game, player):
     if game.is_winner(player):
         return float('inf')
     
-    blank_spaces = game.get_blank_spaces()
+    blank_spaces = len(game.get_blank_spaces())
     total_spaces = game.width * game.height
-    return float((len(blank_spaces)/total_spaces)*100)
+    return float((blank_spaces/total_spaces)*100)
 
 def custom_score_2(game, player):
     """his score is removes 3 legal_moves if the player is in a corner position, because the chance to win is always worse if you are in the corners.
@@ -75,10 +75,8 @@ def custom_score_2(game, player):
 
     return float(my_moves - opponent_moves)    
         
-
-
 def custom_score_3(game, player):
-    """this score is equal to the difference of aivailable moves for the player and twice for the oppenent - so it is more aggressive, because of the multiplier
+    """this score is equal to the difference of available moves for the player and twice for the oppenent - so it is more aggressive, because of the multiplier
 
     Parameters
     ----------
@@ -324,6 +322,7 @@ class AlphaBetaPlayer(IsolationPlayer):
                 
                 if self.time_left() < self.TIMER_THRESHOLD:
                     return self.best_move
+                
         except SearchTimeout:
             #return best move with best possible depth
             return self.best_move
